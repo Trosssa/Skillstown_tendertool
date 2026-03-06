@@ -843,27 +843,40 @@ def main():
         st.divider()
 
         # Export — gebruik display_df zodat AI score filter en zoekfilter meegenomen worden
+
+        # Tenders zonder AI score krijgen een label en worden uitgesloten van export
+        export_source = display_df.copy()
+        if ai_scored and "ai_score" in export_source.columns:
+            no_score_mask = export_source["ai_score"].isna()
+            export_source.loc[no_score_mask, "ai_explanation"] = "Onvoldoende input data"
+            export_source = export_source[~no_score_mask]
+
+        # Dynamische kolomnaam voor herpublicatie op basis van contract_years instelling
+        repub_col_name = f"Geschatte herpublicatie (basis: {contract_years}j na publicatie)"
+
         export_cols = [
             # Blok 1: Waarom relevant
             "ai_score", "ai_explanation",
             # Blok 2: De kans
             "organization", "title", "description",
-            "winning_company", "winning_company_city",
+            "winning_company",
             "expected_republication",
+            "contract_end",
             # Blok 3: Context
             "contract_value", "estimated_value",
             "publication_date", "lot_description",
             # Blok 4: Details
             "matched_terms", "keyword_score",
-            "contract_start", "contract_end", "award_date",
+            "contract_start", "award_date",
             "num_bids",
             # Blok 5: Achtergrondinformatie
             "organization_type", "organization_city",
+            "winning_company_city",
             "cpv_codes", "cpv_description",
             "procedure_type", "tender_scope",
             "tender_url",
         ]
-        export_cols = [c for c in export_cols if c in display_df.columns]
+        export_cols = [c for c in export_cols if c in export_source.columns]
 
         export_rename = {
             "ai_score": "AI Score",
@@ -872,8 +885,8 @@ def main():
             "title": "Titel",
             "description": "Omschrijving",
             "winning_company": "Gegund aan (concurrent)",
-            "winning_company_city": "Gegund aan (plaats)",
-            "expected_republication": "Geschatte herpublicatie",
+            "expected_republication": repub_col_name,
+            "contract_end": "Contract eind",
             "contract_value": "Contractwaarde",
             "estimated_value": "Geraamde waarde",
             "publication_date": "Publicatiedatum",
@@ -881,11 +894,11 @@ def main():
             "matched_terms": "Gevonden termen",
             "keyword_score": "Keyword score",
             "contract_start": "Contract start",
-            "contract_end": "Contract eind",
             "award_date": "Gunningsdatum",
             "num_bids": "Aantal inschrijvingen",
             "organization_type": "Soort organisatie",
             "organization_city": "Organisatie plaats",
+            "winning_company_city": "Gegund aan (plaats)",
             "cpv_codes": "CPV code",
             "cpv_description": "CPV omschrijving",
             "procedure_type": "Procedure type",
@@ -893,7 +906,7 @@ def main():
             "tender_url": "TenderNed URL",
         }
 
-        export_df = display_df[export_cols].rename(columns=export_rename)
+        export_df = export_source[export_cols].rename(columns=export_rename)
         export_df = export_df.sort_values("AI Score", ascending=False, na_position="last")
         export_data = export_to_excel(export_df)
         st.download_button(
