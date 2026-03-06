@@ -111,17 +111,71 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+COLUMN_EXPLANATIONS = {
+    "AI Score": (
+        "Score van 0-100 door Claude AI (Haiku model). Geeft aan hoe relevant deze tender is voor SkillsTown. "
+        "100 = gewonnen door directe concurrent. Primaire sorteervolgorde."
+    ),
+    "AI Toelichting": (
+        "Uitleg van de AI over waarom deze tender relevant of irrelevant is. "
+        "Gebaseerd op titel, omschrijving, CPV-code en winnende partij."
+    ),
+    "Organisatie": "Naam van de aanbestedende dienst (opdrachtgever). Oorspronkelijke TenderNed veld: naam_aanbestedende_dienst.",
+    "Titel": "Naam/onderwerp van de aanbesteding zoals gepubliceerd op TenderNed. Veld: naam_aanbesteding.",
+    "Omschrijving": (
+        "Vrije tekstomschrijving van de opdracht zoals de aanbestedende dienst die heeft gepubliceerd. "
+        "Veld: omschrijving_aanbesteding. Basis voor AI scoring en keyword matching."
+    ),
+    "Gegund aan (concurrent)": (
+        "Bedrijf dat de opdracht gewonnen heeft. Veld: naam_gegunde_onderneming. "
+        "Kernconcurrenten (Plusport, GoodHabitz, etc.) geven automatisch AI Score 100."
+    ),
+    "Herpublicatie verwacht": (
+        "Geschatte datum waarop de organisatie opnieuw gaat aanbesteden. "
+        "Zie kolom 'Basis herpublicatie' voor hoe dit berekend is."
+    ),
+    "Basis herpublicatie": (
+        "Hoe de herpublicatiedatum berekend is. Twee mogelijkheden: "
+        "(1) 'Einddatum contract: ...' = exacte einddatum bekend uit TenderNed, geen schatting. "
+        "(2) 'Publicatiedatum ... + X jaar contractduur' = schatting op basis van aangenomen contractduur."
+    ),
+    "Contractwaarde": "Definitieve contractwaarde in euro's zoals opgegeven bij gunning. Veld: definitieve_waarde___bedrag.",
+    "Geraamde waarde": "Door de aanbestedende dienst geraamde waarde vóór gunning. Veld: oorspronkelijk_geraamde_waarde___bedrag.",
+    "Publicatiedatum": (
+        "Datum waarop de aanbesteding gepubliceerd is op TenderNed. "
+        "Basis voor herpublicatieschatting en datumfilter in de app. Veld: publicatiedatum."
+    ),
+    "Perceel omschrijving": "Omschrijving van een specifiek perceel (onderdeel) van de aanbesteding. Veld: perceel_beschrijving.",
+    "Gevonden termen": "Zoektermen uit de SkillsTown-woordenlijst die gevonden zijn in titel/omschrijving (keyword matching).",
+    "Keyword score": "Gewogen score op basis van gevonden zoektermen (LMS=5, e-learning=4, blended=3, etc.). Schaal 0-100.",
+    "Contract start": "Startdatum van het gegunde contract. Veld: aanvang_opdracht.",
+    "Contract eind": "Einddatum van het gegunde contract. Als ingevuld: wordt direct gebruikt als herpublicatiedatum (geen schatting). Veld: voltooiing_opdracht.",
+    "Gunningsdatum": "Datum waarop de opdracht officieel gegund is aan de winnende partij. Veld: gunningsdatum.",
+    "Aantal inschrijvingen": "Aantal partijen dat heeft ingeschreven op de aanbesteding. Veld: aantal_inschrijvingen.",
+    "Soort organisatie": "Type aanbestedende dienst (gemeente, provincie, rijksoverheid, zorg, etc.). Veld: soort_aanbestedende_dienst.",
+    "Organisatie plaats": "Vestigingsplaats van de aanbestedende dienst. Veld: ad_plaats.",
+    "Gegund aan (plaats)": "Vestigingsplaats van de winnende partij. Veld: on_plaats.",
+    "CPV code": "Europese productclassificatiecode (Common Procurement Vocabulary). Veld: hoofd_cpv_code.",
+    "CPV omschrijving": "Omschrijving behorend bij de CPV-code. Veld: hoofd_cpv_omschrijving.",
+    "Procedure type": "Type aanbestedingsprocedure (openbaar, niet-openbaar, onderhandeling, etc.). Veld: type_procedure.",
+    "Nationaal/Europees": "Of de aanbesteding nationaal of Europees (boven drempelwaarde) is gepubliceerd. Veld: nationaal_of_europees.",
+    "TenderNed URL": "Directe link naar de aanbesteding op TenderNed.nl. Veld: url_tenderned.",
+}
+
+
 def export_to_excel(df: pd.DataFrame) -> BytesIO:
-    """Export DataFrame to Excel file."""
+    """Export DataFrame to Excel file with explanation sheet."""
     output = BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
         export_df = df.copy()
 
         date_cols = ["publication_date", "award_date", "contract_start", "contract_end",
-                     "reference_date", "expected_republication", "contact_by_date"]
+                     "reference_date", "expected_republication", "contact_by_date",
+                     "Publicatiedatum", "Gunningsdatum", "Contract start", "Contract eind",
+                     "Herpublicatie verwacht"]
         for col in date_cols:
             if col in export_df.columns:
-                export_df[col] = pd.to_datetime(export_df[col]).dt.date
+                export_df[col] = pd.to_datetime(export_df[col], errors="coerce").dt.date
 
         export_df.to_excel(writer, sheet_name="Tenders", index=False)
 
@@ -129,6 +183,20 @@ def export_to_excel(df: pd.DataFrame) -> BytesIO:
         for i, col in enumerate(export_df.columns):
             max_len = max(export_df[col].astype(str).map(len).max(), len(col)) + 2
             worksheet.set_column(i, i, min(max_len, 50))
+
+        # Werkblad 2: uitleg per kolom
+        legend_rows = []
+        for col in export_df.columns:
+            legend_rows.append({
+                "Kolom": col,
+                "Uitleg": COLUMN_EXPLANATIONS.get(col, "—"),
+            })
+        legend_df = pd.DataFrame(legend_rows)
+        legend_df.to_excel(writer, sheet_name="Uitleg kolommen", index=False)
+
+        legend_ws = writer.sheets["Uitleg kolommen"]
+        legend_ws.set_column(0, 0, 30)   # Kolom-naam kolom
+        legend_ws.set_column(1, 1, 80)   # Uitleg kolom
 
     output.seek(0)
     return output
