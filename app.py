@@ -10,13 +10,20 @@ import pandas as pd
 def check_password():
     if st.session_state.get("authenticated"):
         return True
-    pw = st.text_input("Wachtwoord", type="password", key="login_pw")
-    if st.button("Inloggen"):
-        if pw == st.secrets.get("APP_PASSWORD", ""):
-            st.session_state["authenticated"] = True
-            st.rerun()
-        else:
-            st.error("Ongeldig wachtwoord")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("## SkillsTown")
+        st.markdown("### TenderNed Analyzer")
+        st.markdown("---")
+        st.markdown("Interne tool voor het analyseren van aanbestedingen uit TenderNed.")
+        pw = st.text_input("Wachtwoord", type="password", key="login_pw",
+                           label_visibility="collapsed", placeholder="Wachtwoord")
+        if st.button("Inloggen", use_container_width=True, type="primary"):
+            if pw == st.secrets.get("APP_PASSWORD", ""):
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("Ongeldig wachtwoord")
     return False
 
 if not check_password():
@@ -61,7 +68,6 @@ st.set_page_config(
 st.markdown("""
 <style>
     /* SkillsTown branding: dark, professional, minimalist */
-    .metric-card { padding: 1rem; margin-bottom: 1rem; border: 1px solid #e0e0e0; }
 
     /* Header styling */
     header[data-testid="stHeader"] {
@@ -84,21 +90,26 @@ st.markdown("""
     .stButton > button {
         background-color: #000000;
         color: #ffffff;
-        border: 1px solid #333333;
-        border-radius: 0px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        padding: 0.4rem 1.2rem;
     }
     .stButton > button:hover {
-        background-color: #1a1a1a;
+        background-color: #333333;
         color: #ffffff;
-        border: 1px solid #555555;
     }
 
     /* Download button */
     .stDownloadButton > button {
         background-color: #000000;
         color: #ffffff;
-        border: 1px solid #333333;
-        border-radius: 0px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+    .stDownloadButton > button:hover {
+        background-color: #333333;
     }
 
     /* Tabs styling */
@@ -107,14 +118,15 @@ st.markdown("""
         font-weight: 500;
     }
     .stTabs [aria-selected="true"] {
-        border-bottom-color: #000000;
+        border-bottom: 3px solid #000000;
+        font-weight: 600;
     }
 
     /* Metric containers */
     [data-testid="stMetric"] {
-        border: 1px solid #e0e0e0;
-        padding: 12px;
-        background-color: #fafafa;
+        border-left: 3px solid #000000;
+        padding: 12px 16px;
+        background-color: #f8f8f8;
     }
     [data-testid="stMetricLabel"] {
         color: #100717;
@@ -291,9 +303,11 @@ def load_local_dataset(file_path: str) -> Optional[pd.DataFrame]:
 
 
 def main():
-    # Header
-    st.title("SkillsTown TenderNed Analyzer")
-    st.markdown("Analyseer relevante aanbestedingen uit TenderNed data.")
+    # Header — compact, metrics naast titel
+    header_col, m1, m2, m3 = st.columns([3, 1, 1, 1])
+
+    with header_col:
+        st.markdown("## TenderNed Analyzer")
 
     # Sidebar
     with st.sidebar:
@@ -334,24 +348,21 @@ def main():
             help="Sluit tenders uit die vacature-gerelateerde woorden bevatten"
         )
 
-        with st.expander("Zoektermen"):
-            st.write(", ".join(SEARCH_TERMS))
-        with st.expander("CPV codes"):
+        with st.expander("Filter details bekijken"):
+            st.markdown("**Zoektermen**")
+            st.caption(", ".join(SEARCH_TERMS[:12]) + f"... (+{max(0, len(SEARCH_TERMS)-12)} meer)")
+            st.markdown("**CPV codes**")
             for category, codes in CPV_CODES.items():
-                st.markdown(f"**{category.replace('_', ' ').title()}**")
-                for code in codes:
-                    desc = CPV_DESCRIPTIONS.get(code, "")
-                    st.markdown(f"- `{code}`: {desc}")
-        with st.expander("Uitgesloten woorden"):
-            st.write(", ".join(NEGATIVE_KEYWORDS))
-        with st.expander("Bekende concurrenten"):
-            st.write(", ".join(COMPETITORS[:15]) + "...")
+                st.caption(f"{category.replace('_', ' ').title()}: {', '.join(codes)}")
+            st.markdown("**Uitgesloten woorden**")
+            st.caption(", ".join(NEGATIVE_KEYWORDS[:10]) + ("..." if len(NEGATIVE_KEYWORDS) > 10 else ""))
+            st.markdown("**Kernconcurrenten**")
+            st.caption(", ".join(list(CORE_COMPETITORS.keys())))
 
         st.divider()
 
-        # Datum filter (breed, achtergrondfilter)
-        st.divider()
-        st.subheader("Datum filter")
+        # Herpublicatie venster
+        st.subheader("Herpublicatie venster")
         st.caption("Verwachte herpublicatie (publicatiedatum + contractduur)")
         date_filter_enabled = st.checkbox(
             "Filter op verwachte herpublicatie",
@@ -426,21 +437,24 @@ def main():
 
     # Main content
     if uploaded_file is None:
-        st.info("Geen dataset gevonden. Upload een TenderNed Excel bestand via de sidebar om te beginnen.")
-
-        st.markdown("""
-        ### Wat doet deze tool?
-        - **Filtert** relevante aanbestedingen op zoektermen en CPV codes
-        - **Groepeert** resultaten per organisatie voor overzicht
-        - **Toont** welke organisaties eerder relevante tenders uitschreven
-        - **Analyseert** concurrentie: welke partijen wonnen eerdere opdrachten
-        - **Schat in** wanneer contracten mogelijk verlopen (optioneel)
-
-        ### Hoe te gebruiken
-        1. Plaats de TenderNed Excel in de app-map, of upload via de sidebar
-        2. Bekijk de analyse per organisatie, tender of concurrent
-        3. Exporteer resultaten naar Excel
-        """)
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("### Wat doet deze tool?")
+            st.markdown("""
+- **Filtert** relevante aanbestedingen op zoektermen en CPV codes
+- **Groepeert** resultaten per organisatie voor overzicht
+- **Toont** welke organisaties eerder relevante tenders uitschreven
+- **Analyseert** concurrentie: welke partijen wonnen eerdere opdrachten
+- **Schat in** wanneer contracten mogelijk verlopen
+            """)
+        with c2:
+            st.markdown("### Starten")
+            st.markdown("""
+1. Plaats de TenderNed Excel in de app-map, **of**
+2. Upload via de sidebar (links)
+3. Gebruik de tabs: **Organisaties** voor leads, **Concurrentie** voor marktoverzicht
+            """)
+        st.info("Upload een TenderNed Excel bestand via de sidebar links om te beginnen.")
         return
 
     # Load data — ondersteunt zowel lokaal pad (str) als geüpload bestand
@@ -542,17 +556,15 @@ def main():
 
         ai_scored = "ai_score" in predicted_df.columns and predicted_df["ai_score"].notna().any()
 
-    # Summary metrics
-    st.header("Overzicht")
-    col1, col2, col3 = st.columns(3)
-    with col1:
+    # Metrics naast de header titel
+    org_count = predicted_df["organization"].nunique() if "organization" in predicted_df.columns else 0
+    with m1:
         st.metric("Totaal in dataset", f"{len(df):,}")
-    with col2:
+    with m2:
         st.metric("Relevante tenders", f"{len(predicted_df):,}")
-    with col3:
-        # Unique organizations
-        org_count = predicted_df["organization"].nunique() if "organization" in predicted_df.columns else 0
+    with m3:
         st.metric("Unieke organisaties", org_count)
+    st.markdown("---")
 
     # Aggregate organizations (cached)
     with st.spinner("Organisaties aggregeren..."):
@@ -759,7 +771,16 @@ def main():
                                   pub_date.strftime("%Y-%m-%d") if pd.notna(pub_date) else "-")
                     with info_cols[1]:
                         repub_q = org_row.get("expected_republication_quarter", "")
-                        st.metric("Geschatte herpublicatie", repub_q if repub_q else "-")
+                        repub_date = org_row.get("expected_republication")
+                        urgency_delta = None
+                        if pd.notna(repub_date):
+                            months_away = (pd.Timestamp(repub_date) - pd.Timestamp.now()).days / 30
+                            if months_away < 3:
+                                urgency_delta = "Urgent"
+                            elif months_away < 6:
+                                urgency_delta = "Binnenkort"
+                        st.metric("Geschatte herpublicatie", repub_q if repub_q else "-",
+                                  delta=urgency_delta, delta_color="inverse")
                     with info_cols[2]:
                         val = org_row.get("total_contract_value", 0)
                         st.metric("Contractwaarde", format_value(val))
@@ -843,7 +864,7 @@ def main():
     with tab_tenders:
         st.subheader("Alle relevante tenders")
 
-        filter_col1, filter_col2 = st.columns(2)
+        filter_col1, filter_col2, filter_col3 = st.columns(3)
         with filter_col1:
             search_tender = st.text_input(
                 "Zoek in titel/organisatie",
@@ -860,8 +881,18 @@ def main():
                 )
             else:
                 ai_score_filter = 0
+                st.caption("AI scoring niet actief")
+        with filter_col3:
+            if "match_type" in predicted_df.columns:
+                match_options = ["Alle"] + sorted(predicted_df["match_type"].dropna().unique().tolist())
+                match_filter = st.selectbox("Matchtype", match_options)
+            else:
+                match_filter = "Alle"
 
         display_df = predicted_df.copy()
+
+        if match_filter != "Alle" and "match_type" in display_df.columns:
+            display_df = display_df[display_df["match_type"] == match_filter]
 
         if search_tender:
             mask = (
@@ -1025,9 +1056,21 @@ def main():
                 x="Concurrent",
                 y="Aantal opdrachten",
                 color="Type",
-                color_discrete_map={"Kernconcurrent": "#000000", "Overig": "#999999"},
+                color_discrete_map={"Kernconcurrent": "#000000", "Overig": "#aaaaaa"},
+                title="Gewonnen opdrachten per concurrent (volledige dataset)",
+                labels={"Aantal opdrachten": "Aantal gewonnen opdrachten", "Type": ""},
+                height=380,
             )
-            fig.update_layout(xaxis_tickangle=-45)
+            fig.update_layout(
+                xaxis_tickangle=-30,
+                xaxis_title="",
+                plot_bgcolor="white",
+                paper_bgcolor="white",
+                font_family="sans-serif",
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                margin=dict(t=60, b=20),
+            )
+            fig.update_traces(marker_line_width=0)
             st.plotly_chart(fig, use_container_width=True)
 
             # Kernconcurrenten apart uitlichten
@@ -1126,17 +1169,27 @@ def main():
 
         col_info = get_column_info(df)
 
-        st.markdown("**Geladen kolommen:**")
-        st.write(", ".join(col_info["columns"]))
+        info_c1, info_c2, info_c3 = st.columns(3)
+        with info_c1:
+            st.metric("Totaal kolommen", len(col_info["columns"]))
+        with info_c2:
+            st.metric("Datumvelden", len(col_info["date_columns_found"]))
+        with info_c3:
+            st.metric("Tekstvelden", len(col_info["text_columns_found"]))
 
-        st.markdown("**Gevonden datumvelden:**")
-        st.write(", ".join(col_info["date_columns_found"]) or "Geen")
-
-        st.markdown("**Gevonden tekstvelden:**")
-        st.write(", ".join(col_info["text_columns_found"]) or "Geen")
+        with st.expander("Alle kolommen bekijken"):
+            col_df = pd.DataFrame({
+                "Kolom": col_info["columns"],
+                "Type": [
+                    "datum" if c in col_info["date_columns_found"]
+                    else "tekst" if c in col_info["text_columns_found"]
+                    else "overig"
+                    for c in col_info["columns"]
+                ]
+            })
+            st.dataframe(col_df, use_container_width=True, hide_index=True)
 
         st.divider()
-
         st.markdown("**Ruwe data preview (eerste 10 rijen):**")
         st.dataframe(df.head(10), use_container_width=True)
 
