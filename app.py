@@ -1021,6 +1021,7 @@ def main():
             # Expected republications (if available)
             repub_df = predicted_df[predicted_df["expected_republication"].notna()].copy()
             if not repub_df.empty:
+                repub_df["expected_republication"] = pd.to_datetime(repub_df["expected_republication"], errors="coerce")
                 repub_df["repub_jaar"] = repub_df["expected_republication"].dt.year
                 repub_yearly = repub_df.groupby("repub_jaar").size().reset_index(name="Aantal")
 
