@@ -240,54 +240,7 @@ for variants in CORE_COMPETITORS.values():
 # ===============================================
 # Minder direct dan de 7 kerncurrenten, maar wel relevante signalen.
 
-SECONDARY_COMPETITORS = [
-    # Nederlandse e-learning platforms
-    "studytube",        # ook in CORE maar hier voor volledigheid
-    "springest",
-    "itslearning",
-    "its learning",
-    "anewspring",
-    "a new spring",
-    "defacto",
-    "the learning network",
-    "the learning company",
-    "kennisnet",
-
-    # Internationale LMS-platforms die in NL tenders voorkomen
-    "linkedin learning",
-    "skillsoft",
-    "cornerstone",
-    "cornerstone ondemand",
-    "docebo",
-    "totara",
-    "moodle",
-    "brightspace",
-    "d2l",
-    "blackboard",
-    "canvas lms",
-    "instructure",
-    "absorb lms",
-    "360learning",
-    "workday learning",
-    "successfactors",
-    "sap litmos",
-
-    # Overheid-opleiders
-    "bestuursacademie",
-    "bestuursacademie nederland",
-    "sdu",
-    "wolters kluwer",
-
-    # Zorg-opleiders
-    "bsl academy",
-
-    # Overige
-    "go1",
-    "edflex",
-    "getabstract",
-    "ncoi",
-    "loi",
-]
+SECONDARY_COMPETITORS = []
 
 # Gecombineerde lijst voor backwards-compat (gebruikt door bestaande functies)
 COMPETITORS = list(set(ALL_CORE_COMPETITOR_TERMS + SECONDARY_COMPETITORS))
