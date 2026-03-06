@@ -278,8 +278,8 @@ def process_tenders(_df, use_keywords, use_cpv, filter_negatives, contract_years
 
 
 @st.cache_data(show_spinner=False)
-def aggregate_orgs(_predicted_df, contract_years, lead_months):
-    """Cache organization aggregation."""
+def aggregate_orgs(_predicted_df, contract_years, lead_months, _ai_score_hash=None):
+    """Cache organization aggregation. _ai_score_hash bust de cache als AI scores veranderen."""
     from src.org_analyzer import aggregate_organizations, get_organization_summary
     org_df = aggregate_organizations(_predicted_df, contract_years, lead_months)
     org_summary = get_organization_summary(org_df)
@@ -566,9 +566,12 @@ def main():
         st.metric("Unieke organisaties", org_count)
     st.markdown("---")
 
-    # Aggregate organizations (cached)
+    # Aggregate organizations (cached, cache-bust op basis van AI scores)
+    ai_score_hash = None
+    if "ai_score" in predicted_df.columns:
+        ai_score_hash = int(predicted_df["ai_score"].notna().sum())
     with st.spinner("Organisaties aggregeren..."):
-        org_df, org_summary = aggregate_orgs(predicted_df, contract_years, lead_months)
+        org_df, org_summary = aggregate_orgs(predicted_df, contract_years, lead_months, _ai_score_hash=ai_score_hash)
 
     # Tabs
     tab_tenders, tab_org, tab_comp, tab_timeline, tab_info = st.tabs([
