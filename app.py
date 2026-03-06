@@ -5,6 +5,22 @@ Data-analyse tool voor het analyseren van aanbestedingen uit TenderNed.
 
 import streamlit as st
 import pandas as pd
+
+# --- Wachtwoordbeveiliging ---
+def check_password():
+    if st.session_state.get("authenticated"):
+        return True
+    pw = st.text_input("Wachtwoord", type="password", key="login_pw")
+    if st.button("Inloggen"):
+        if pw == st.secrets.get("APP_PASSWORD", ""):
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Ongeldig wachtwoord")
+    return False
+
+if not check_password():
+    st.stop()
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
