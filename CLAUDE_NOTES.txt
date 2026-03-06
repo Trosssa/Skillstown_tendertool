@@ -1,0 +1,170 @@
+================================================================================
+CLAUDE CONTEXT NOTES - SkillsTown TenderNed Analyzer
+================================================================================
+Laatst bijgewerkt: 2026-02-23
+
+BELANGRIJK: Lees PROJECTDOEL_EN_ROADMAP.md voor volledige context en roadmap.
+
+================================================================================
+PROJECT DOEL
+================================================================================
+
+**Data-analyse tool** die TenderNed aanbestedingsdata omzet naar bruikbare
+inzichten voor SkillsTown sales. Geen CRM, geen bellijst — puur analyse.
+
+**Kernvragen die de tool beantwoordt:**
+1. Welke organisaties schreven eerder relevante tenders uit?
+2. Hoe lang geleden was dat?
+3. Wie was de vorige leverancier?
+4. Hoe groot was het contract?
+
+**AI scoring is het primaire rangschikkingsprincipe (Fase 6).**
+Datum (herpublicatie) is een brede achtergrondfilter, niet leidend.
+
+================================================================================
+HUIDIGE STATUS (na Fase 6 — 2026-02-23)
+================================================================================
+
+WERKT:
+[x] Data laden uit TenderNed Excel (111+ kolommen mapping)
+[x] AUTO-LOAD lokale dataset (Dataset_Tenderned*.xlsx in Skillstown/ map)
+[x] Filteren op keywords/CPV-codes/negatieve woorden
+[x] GEWOGEN keyword-scoring (LMS=5, e-learning=4, blended=3, webinar=2, mgmt=1)
+[x] KERNCONCURRENTEN (7 directe concurrenten) → score override 100
+[x] Concurrentie detectie (7 kern + 30+ overige)
+[x] AI relevantie scoring (Claude Haiku, primaire ranking)
+[x] Organisatie-overzicht gesorteerd op AI score → keyword_score → datum
+[x] Tijdlijn visualisatie (tenders per jaar)
+[x] Seizoenspatroon detectie per organisatie
+[x] Zoekfunctie op organisaties en tenders
+[x] Export naar Excel
+[x] SkillsTown huisstijl
+[x] Datum als brede filter (slider -1 tot +5 jaar, standaard aan)
+[x] 93 unit tests
+[x] scripts/analyze_competitor_tenders.py (analyse kernconcurrenten-tenders)
+
+NOG TE DOEN:
+[ ] ANTHROPIC_API_KEY instellen om AI scoring te activeren
+[ ] analyze_competitor_tenders.py --ai draaien (17 tenders, goedkoop)
+[ ] SKILLSTOWN_CONTEXT_DOCUMENT.md aanvullen met analyse-resultaten
+[ ] Fase 7: web scraping van top 50 tenders (later, expliciet uitgesteld)
+
+================================================================================
+UI TABS
+================================================================================
+
+1. Organisaties - Analyse per organisatie (primair: AI score → keyword_score → datum)
+2. Tenders - Alle relevante tenders (sorteer: AI score → keyword_score → datum)
+3. Concurrentie - Kernconcurrenten apart (zwarte balken), overige concurrenten
+4. Tijdlijn - Tenders per jaar + geschatte herpublicaties
+5. Data Info - Debug info
+
+================================================================================
+PROJECTSTRUCTUUR
+================================================================================
+
+Skillstown/
+├── app.py                          # Streamlit UI
+├── requirements.txt
+├── PROJECTDOEL_EN_ROADMAP.md       # Volledige documentatie
+├── CLAUDE_NOTES.txt                # Dit bestand
+├── FEATURE_REQUESTS.md             # Feature backlog
+├── FASE6_PLAN.md                   # Fase 6 planning (alle TO-DOs voltooid)
+├── SKILLSTOWN_CONTEXT_DOCUMENT.md  # AI scoring context (van CEO mail Joris)
+├── Dataset_Tenderned-*.xlsx        # Echte data (66MB, .gitignore)
+├── cache/
+│   └── ai_scores.json              # Persistent AI score cache (MD5-gebaseerd)
+├── .streamlit/config.toml
+├── src/
+│   ├── config.py                   # TERM_WEIGHTS, CPV, CORE_COMPETITORS
+│   ├── data_loader.py              # Excel laden (string path + UploadedFile)
+│   ├── filters.py                  # Filter logica + calculate_keyword_score()
+│   ├── predictor.py                # Herpublicatie-schattingen
+│   ├── org_analyzer.py             # Organisatie-aggregatie
+│   └── ai_scorer.py                # AI scoring (Claude Haiku, primair)
+├── scripts/
+│   ├── analyze_competitor_tenders.py  # Analyse script kernconcurrenten
+│   └── output/
+│       ├── competitor_analysis.txt
+│       ├── competitor_tenders.json
+│       └── competitor_tenders.xlsx
+└── tests/
+    ├── test_all.py                 # 93 tests
+    └── sample data files
+
+================================================================================
+APP STARTEN
+================================================================================
+
+cd C:\Dev\Claude\Skillstown
+streamlit run app.py
+python -m pytest tests/test_all.py -v
+
+# Concurrenten-analyse draaien (vereist ANTHROPIC_API_KEY voor --ai):
+python scripts/analyze_competitor_tenders.py
+python scripts/analyze_competitor_tenders.py --ai
+
+================================================================================
+SCORING LOGICA (Fase 6)
+================================================================================
+
+1. KERNCONCURRENT GEWONNEN → score = 100 (override, altijd bovenaan)
+   Directe concurrenten: Plusport, GoodHabitz, New Heroes, StudyTube,
+                         Courseware, Online Academie, Uplearning
+
+2. KEYWORD SCORING (calculate_keyword_score in filters.py):
+   - Gewogen frequentie-optelling (TERM_WEIGHTS in config.py)
+   - Genormaliseerd naar 0-100 (cap = 60 raw punten = score 100)
+   - LMS=5, LXP=5, e-learning=4, leerplatform=4, blended=3, webinar=2, mgmt=1
+
+3. AI SCORING (ai_scorer.py):
+   - Model: claude-haiku-4-5-20251001 (~$0.10 per 1000 tenders)
+   - Context: SKILLSTOWN_CONTEXT_DOCUMENT.md + vaste scoringsgids
+   - Pre-filter: skip kernconcurrenten (al 100), skip oud (>5 jaar), skip te kort
+   - Persistente cache: cache/ai_scores.json (MD5 van title+desc+org)
+   - Velden in prompt: title, description, organization, CPV, winning_company,
+                       keyword_score, lot_description
+
+4. SORTEERVOLGORDE in UI: ai_score → keyword_score → publication_date
+
+================================================================================
+DATASET
+================================================================================
+
+- Bestand: Dataset_Tenderned-2016-01-01 tm 2025-12-31_Leeswijzer.xlsx (66MB)
+- Staat LOKAAL op schijf in Skillstown/ map — in .gitignore (te groot voor git)
+- 138,075 rijen, 112 kolommen
+- naam_gegunde_onderneming: 63,283 gevuld (45.8%)
+- Toekomstig: elke ~6 maanden vervangen (zelfde bestandsnaam-patroon)
+- App laadt automatisch via find_local_dataset() in app.py
+- Upload-widget als fallback
+
+================================================================================
+BELANGRIJKE DESIGN BESLISSINGEN
+================================================================================
+
+- Tool is een DATA-ANALYSE tool, geen CRM/bellijst
+- AI score is het primaire sorteerveld (Fase 6)
+- Publicatiedatum-voorspelling is een BREDE FILTER, niet leidend (1-5 jaar slider)
+- Geen priority badges (URGENT/HIGH/etc) in de UI
+- Sales gebruikt eigen CRM voor opvolging
+- Kernconcurrenten-tenders: slechts 17 gevonden (45.8% winning_company coverage)
+  → meer een hulpmiddel dan complete dataset; dit is acceptabel
+
+================================================================================
+KERNCONCURRENTEN (config.py: CORE_COMPETITORS)
+================================================================================
+
+Plusport, GoodHabitz, New Heroes, StudyTube, Courseware, Online Academie, Uplearning
+
+Elk met meerdere naamvariaties (b.v. "studytube b.v.", "study tube", etc.)
+Tenders gewonnen door deze partijen = score override 100
+
+Gevonden in dataset (naam_gegunde_onderneming):
+- StudyTube: 11 tenders (gemeenten, ROC, provincie)
+- Uplearning: 4 tenders (Belastingdienst, Avans)
+- Courseware: 2 tenders (gemeenten)
+- Plusport, GoodHabitz, New Heroes, Online Academie: 0 gevonden
+  (reden: raamcontracten niet als losse tenders, of andere naamvorm)
+
+================================================================================

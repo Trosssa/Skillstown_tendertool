@@ -1,0 +1,83 @@
+======================================================================
+CONCURRENTEN-TENDERS ANALYSE RAPPORT
+Gegenereerd op basis van TenderNed dataset 2016-2025
+======================================================================
+
+TOTAAL: 17 tenders gewonnen door de 7 kernconcurrenten
+
+──────────────────────────────────────────────────
+AANTALLEN PER CONCURRENT
+──────────────────────────────────────────────────
+
+StudyTube: 11 tenders
+  Jaren: 2022: 1, 2023: 2, 2024: 1, 2025: 7
+  Top CPV: 80000000-4, 80500000-9, 48190000-6, 72260000-5, 72210000-0
+  Top organisaties: Gemeente Roermond, Gemeente Peel en Maas, Gemeente Harderwijk, KAREL., Stichting ROC Midden Nederland
+  Voorbeeldtitels:
+    - Online Leerplaform met LMS en makelaarsfunctie
+    - Digitale LeerOmgeving (DLO)
+    - Leer- en ontwikkelplatform
+
+Courseware: 2 tenders
+  Jaren: 2024: 1, 2025: 1
+  Top CPV: 72000000-5, 72260000-5
+  Top organisaties: Gemeente Hollands Kroon, Gemeente Zutphen
+  Voorbeeldtitels:
+    - Online Leerplatform  (LMS/LXP) SaaS
+    - Learning Experience Platform (LXP) of Learning Management System (LMS)
+
+Uplearning: 4 tenders
+  Jaren: 2022: 2, 2023: 1, 2025: 1
+  Top CPV: 80000000-4, 48000000-8, 80500000-9
+  Top organisaties: Belastingdienst, IUC Belastingdienst, Avans Hogeschool te Tilburg
+  Voorbeeldtitels:
+    - Onderwijskundige diensten Rijk - Met voorafgaande marktconsultatie
+    - Onderwijskundige diensten Rijk - Met voorafgaande marktconsultatie
+    - Leveren van een Video Content Management Systeem
+
+──────────────────────────────────────────────────
+TOP CPV-CODES (alle concurrenten)
+──────────────────────────────────────────────────
+  80000000-4: 5x
+  80500000-9: 3x
+  72260000-5: 2x
+  72000000-5: 2x
+  48190000-6: 1x
+  48000000-8: 1x
+  72210000-0: 1x
+  79632000-3: 1x
+  80520000-5: 1x
+
+──────────────────────────────────────────────────
+MEEST VOORKOMENDE TITELWOORDEN
+──────────────────────────────────────────────────
+  leerplatform (5x), online (4x), leer- (3x), onderwijskundige (2x), diensten (2x), rijk (2x), voorafgaande (2x), marktconsultatie (2x), management (2x), systeem (2x), gemeenten (2x), opleidingsmakelaar (2x), opleidingsintermediair (2x), learning (2x), leerplaform (1x), makelaarsfunctie (1x), digitale (1x), leeromgeving (1x), leveren (1x), video (1x)
+
+──────────────────────────────────────────────────
+TOP ORGANISATIES (meeste concurrenten-tenders)
+──────────────────────────────────────────────────
+  Belastingdienst, IUC Belastingdienst: 3x
+  Avans Hogeschool te Tilburg: 1x
+  CAK: 1x
+  De Dienst voor het kadaster en de openbare registers (het Kadaster): 1x
+  Gemeente Harderwijk: 1x
+  Gemeente Hollands Kroon: 1x
+  Gemeente Peel en Maas: 1x
+  Gemeente Roermond: 1x
+  Gemeente Rotterdam: 1x
+  Gemeente Zoetermeer: 1x
+  Gemeente Zutphen: 1x
+  KAREL.: 1x
+  Provincie Limburg: 1x
+  Stichting ROC Midden Nederland: 1x
+  Vereniging van Nederlandse Gemeenten: 1x
+
+──────────────────────────────────────────────────
+PUBLICATIEJAREN
+──────────────────────────────────────────────────
+  2022: ███ (3)
+  2023: ███ (3)
+  2024: ██ (2)
+  2025: █████████ (9)
+
+======================================================================

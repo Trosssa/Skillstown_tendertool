@@ -1,0 +1,30 @@
+# Grote databestanden (te groot voor GitHub)
+Dataset_Tenderned*.xlsx
+Dataset_Tenderned*.parquet
+tests/*.xlsx
+
+# Gegenereerde script output
+scripts/output/*.xlsx
+
+# Streamlit secrets (bevat API keys — nooit committen!)
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
