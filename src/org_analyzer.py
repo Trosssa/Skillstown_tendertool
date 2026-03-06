@@ -166,14 +166,21 @@ def aggregate_organizations(
                 ]["competitor_win"].dropna().unique())
             score_parts.append(f"Kernconcurrent als winnaar: {', '.join(core_names) if core_names else competitors_str}")
         else:
-            # 2. Gebruik de hoogste keyword_score uit de groep als basis
-            if "keyword_score" in group.columns:
+            # 2. AI score: hoogste ai_score uit de groep is primaire basis (één goede tender telt)
+            if "ai_score" in group.columns:
+                max_ai_score = pd.to_numeric(group["ai_score"], errors="coerce").max()
+                if pd.notna(max_ai_score) and max_ai_score > 0:
+                    score = int(max_ai_score)
+                    score_parts.append(f"AI relevantie score: {score}")
+
+            # 3. Keyword score als fallback of aanvulling als AI niet beschikbaar
+            if score == 0 and "keyword_score" in group.columns:
                 max_kw_score = pd.to_numeric(group["keyword_score"], errors="coerce").max()
                 if pd.notna(max_kw_score) and max_kw_score > 0:
                     score = int(max_kw_score)
                     score_parts.append(f"Gewogen keyword score: {score}")
-            else:
-                # Fallback: oude logica als keyword_score niet beschikbaar
+            elif score == 0:
+                # Fallback: oude logica als noch ai_score noch keyword_score beschikbaar
                 if "match_type" in group.columns:
                     match_types = group["match_type"].dropna().tolist()
                     has_both = any("keyword+cpv" in str(m).lower() for m in match_types)
@@ -188,25 +195,7 @@ def aggregate_organizations(
                     elif has_cpv:
                         score += 20
 
-            # 3. Bonus: herhaalde aanbesteder
-            if tender_count >= 3:
-                bonus = min(15, score // 5)  # proportioneel, geen overkill
-                score = min(100, score + bonus)
-                score_parts.append(f"+{bonus} herhaalde aanbesteder ({tender_count} tenders)")
-            elif tender_count >= 2:
-                bonus = min(8, score // 8)
-                score = min(100, score + bonus)
-                score_parts.append(f"+{bonus} meerdere tenders ({tender_count})")
-
-            # 4. Bonus: hoge contractwaarde
-            if total_value > 100000:
-                score = min(100, score + 10)
-                score_parts.append(f"+10 hoge contractwaarde (EUR {total_value:,.0f})")
-            elif total_value > 25000:
-                score = min(100, score + 5)
-                score_parts.append(f"+5 contractwaarde (EUR {total_value:,.0f})")
-
-            # 5. Bonus: secundaire concurrent info
+            # 4. Bonus: secundaire concurrent info
             if competitors_str:
                 score = min(100, score + 3)
                 score_parts.append(f"+3 concurrent-info ({competitors_str})")

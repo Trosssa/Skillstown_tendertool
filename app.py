@@ -702,18 +702,14 @@ def main():
                         display_org_df["expected_republication_quarter"] == repub_filter
                     ]
 
-            # Main table
+            # Main table — compact overzicht
             org_display_cols = [
                 "relevance_score",
                 "organization",
                 "city",
-                "years_since_publication",
-                "last_publication_date",
                 "expected_republication_quarter",
                 "competitors_won",
-                "total_contract_value",
                 "tender_count",
-                "publication_pattern",
             ]
             org_display_cols = [c for c in org_display_cols if c in display_org_df.columns]
 
@@ -721,24 +717,12 @@ def main():
                 "relevance_score": "Relevantie",
                 "organization": "Organisatie",
                 "city": "Plaats",
-                "years_since_publication": "Jaren geleden",
-                "last_publication_date": "Laatste publicatie",
                 "expected_republication_quarter": "Geschatte herpublicatie",
                 "competitors_won": "Eerdere leveranciers",
-                "total_contract_value": "Contractwaarde",
                 "tender_count": "Tenders",
-                "publication_pattern": "Seizoenspatroon",
             }
 
             display_org_formatted = display_org_df.copy()
-            if "total_contract_value" in display_org_formatted.columns:
-                display_org_formatted["total_contract_value"] = display_org_formatted["total_contract_value"].apply(
-                    lambda x: format_value(x)
-                )
-            if "last_publication_date" in display_org_formatted.columns:
-                display_org_formatted["last_publication_date"] = pd.to_datetime(
-                    display_org_formatted["last_publication_date"]
-                ).dt.strftime("%Y-%m-%d")
 
             st.dataframe(
                 display_org_formatted[org_display_cols].rename(columns=org_column_names),
@@ -753,15 +737,13 @@ def main():
 
             for _, org_row in display_org_df.head(50).iterrows():
                 org_name = org_row["organization"]
-                years = org_row.get("years_since_publication")
                 score = org_row.get("relevance_score", 0)
                 label = f"[{score}] {org_name}"
                 if org_row.get("city"):
                     label += f" ({org_row['city']})"
-                label += f" — {format_years(years)}"
                 comp = org_row.get("competitors_won", "")
                 if comp:
-                    label += f" | Leverancier: {comp}"
+                    label += f" | {comp}"
 
                 with st.expander(label):
                     info_cols = st.columns(4)
@@ -804,22 +786,25 @@ def main():
                     # Underlying tenders with full context
                     org_tenders = predicted_df[predicted_df["organization"] == org_name].copy()
                     if not org_tenders.empty:
-                        tender_cols = ["title", "publication_date", "contract_value",
-                                       "expected_republication", "republication_basis",
-                                       "match_type", "winning_company", "cpv_codes"]
+                        tender_cols = ["title", "publication_date", "expected_republication",
+                                       "republication_basis", "winning_company", "contract_value"]
                         tender_cols = [c for c in tender_cols if c in org_tenders.columns]
                         tender_names = {
                             "title": "Tender",
                             "publication_date": "Publicatiedatum",
-                            "contract_value": "Waarde",
                             "expected_republication": "Geschatte herpublicatie",
                             "republication_basis": "Basis schatting",
-                            "match_type": "Match type",
                             "winning_company": "Gegund aan",
-                            "cpv_codes": "CPV code",
+                            "contract_value": "Waarde",
                         }
+                        org_tenders_display = org_tenders[tender_cols].copy()
+                        for date_col in ["publication_date", "expected_republication"]:
+                            if date_col in org_tenders_display.columns:
+                                org_tenders_display[date_col] = pd.to_datetime(
+                                    org_tenders_display[date_col], errors="coerce"
+                                ).dt.strftime("%Y-%m-%d").replace("NaT", "-")
                         st.dataframe(
-                            org_tenders[tender_cols].rename(columns=tender_names),
+                            org_tenders_display.rename(columns=tender_names),
                             use_container_width=True,
                             hide_index=True,
                         )
