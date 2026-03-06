@@ -851,23 +851,19 @@ def main():
             export_source.loc[no_score_mask, "ai_explanation"] = "Onvoldoende input data"
             export_source = export_source[~no_score_mask]
 
-        # Dynamische kolomnaam voor herpublicatie op basis van contract_years instelling
-        repub_col_name = f"Geschatte herpublicatie (basis: {contract_years}j na publicatie)"
-
         export_cols = [
             # Blok 1: Waarom relevant
             "ai_score", "ai_explanation",
             # Blok 2: De kans
             "organization", "title", "description",
             "winning_company",
-            "expected_republication",
-            "contract_end",
+            "expected_republication", "republication_basis",
             # Blok 3: Context
             "contract_value", "estimated_value",
             "publication_date", "lot_description",
             # Blok 4: Details
             "matched_terms", "keyword_score",
-            "contract_start", "award_date",
+            "contract_start", "contract_end", "award_date",
             "num_bids",
             # Blok 5: Achtergrondinformatie
             "organization_type", "organization_city",
@@ -885,8 +881,8 @@ def main():
             "title": "Titel",
             "description": "Omschrijving",
             "winning_company": "Gegund aan (concurrent)",
-            "expected_republication": repub_col_name,
-            "contract_end": "Contract eind",
+            "expected_republication": "Herpublicatie verwacht",
+            "republication_basis": "Basis herpublicatie",
             "contract_value": "Contractwaarde",
             "estimated_value": "Geraamde waarde",
             "publication_date": "Publicatiedatum",
@@ -894,6 +890,7 @@ def main():
             "matched_terms": "Gevonden termen",
             "keyword_score": "Keyword score",
             "contract_start": "Contract start",
+            "contract_end": "Contract eind",
             "award_date": "Gunningsdatum",
             "num_bids": "Aantal inschrijvingen",
             "organization_type": "Soort organisatie",
