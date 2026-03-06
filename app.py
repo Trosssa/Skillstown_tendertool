@@ -475,8 +475,8 @@ def main():
         org_df, org_summary = aggregate_orgs(predicted_df, contract_years, lead_months)
 
     # Tabs
-    tab_org, tab_tenders, tab_comp, tab_timeline, tab_info = st.tabs([
-        "Organisaties", "Tenders", "Concurrentie", "Tijdlijn", "Data Info"
+    tab_tenders, tab_org, tab_comp, tab_timeline, tab_info = st.tabs([
+        "Tenders", "Organisaties", "Concurrentie", "Tijdlijn", "Data Info"
     ])
 
     # ==================== TAB: ORGANISATIES ====================
