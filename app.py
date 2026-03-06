@@ -968,11 +968,9 @@ def main():
                         "winning_company": "Winnaar (exact)", "competitor_win": "Concurrent",
                         "publication_date": "Publicatiedatum", "contract_value": "Waarde",
                     }
+                    sort_col = "publication_date" if "publication_date" in core_tenders.columns else comp_display_cols[0]
                     st.dataframe(
-                        core_tenders[comp_display_cols].rename(columns=comp_column_names).sort_values(
-                            "publication_date" if "publication_date" in core_tenders.columns else comp_display_cols[0],
-                            ascending=False,
-                        ),
+                        core_tenders[comp_display_cols].sort_values(sort_col, ascending=False).rename(columns=comp_column_names),
                         use_container_width=True,
                         height=350,
                     )
